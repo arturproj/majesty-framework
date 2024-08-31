@@ -1,2 +1,2 @@
-# majesty-framework-controller
-package for majesty/framework
+# majesty-framework
+package web framework PHP/8
