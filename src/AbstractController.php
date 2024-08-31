@@ -1,6 +1,6 @@
 <?php
 
-namespace Majesty\Framework\Controller;
+namespace Spacers\Framework\Controller;
 
 class AbstractController extends Constant\Pattern\Singleton implements AbstractControllerInterface
 {
@@ -34,7 +34,7 @@ class AbstractController extends Constant\Pattern\Singleton implements AbstractC
 
             header("HTTP/3 $code");
             header('content-length: ' . ob_get_length());
-            header('x-powered-by: Majesty Framework PHP/' . PHP_VERSION);
+            header('x-powered-by: Spacers Framework PHP/' . PHP_VERSION);
             foreach ($headers as $key => $value) {
                 header("$key: $value");
             }

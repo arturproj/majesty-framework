@@ -1,6 +1,6 @@
 <?php
 
-namespace Majesty\Framework\Controller;
+namespace Spacers\Framework\Controller;
 
 interface AbstractControllerInterface
 {

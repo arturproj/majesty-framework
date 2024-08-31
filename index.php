@@ -1,5 +1,5 @@
 <?php
-use Majesty\Framework\Controller\AbstractController;
+use Spacers\Framework\Controller\AbstractController;
 
 require_once 'vendor/autoload.php';
 

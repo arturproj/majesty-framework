@@ -1,6 +1,6 @@
 <?php
 
-namespace Majesty\Framework\Controller\Constant\Pattern;
+namespace Spacers\Framework\Controller\Constant\Pattern;
 
 class Singleton
 {
