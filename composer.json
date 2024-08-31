@@ -1,0 +1,20 @@
+{
+  "name": "majesty-framework/controller",
+  "description": "packege route controller for majesty/framework",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Majesty\\Framework\\Controller\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "authors": [
+    {
+      "name": "Artur",
+      "email": "artur.ddwebproject@gmail.com"
+    }
+  ],
+  "require": {}
+}
