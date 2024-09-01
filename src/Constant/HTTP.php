@@ -1,6 +1,6 @@
 <?php
 
-namespace Spacers\Framework\Http;
+namespace Spacers\Framework\Constant;
 
 class HTTP
 {

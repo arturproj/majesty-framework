@@ -2,30 +2,46 @@
 
 namespace Spacers\Framework;
 use Spacers\Framework\Constant\Attribute\Route;
+use Spacers\Framework\Exception\NotFoundExcetion;
 
 class Kernel
 {
-    public static function init($callback, array $config = [])
+    public static function init($callback, array $environments = [])
     {
-        foreach ($config as $key => $value) {
+        foreach ($environments as $key => $value) {
             putenv("$key=$value");
         }
         $callback();
 
         $controllers = self::load_controllers();
+
+        if(empty($controllers)) {
+            return dump("controllers list is empty");
+        }
+
         $current_route = new Route(path: $_SERVER["REQUEST_URI"], alias: "*", method: $_SERVER["REQUEST_METHOD"]);
-        foreach ($controllers as $controller) {
+        
+        foreach ($controllers as $ControllerClass) {
+            /** @var \ReflectionClass $controller */
+            $controller = self::getReflectedController($ControllerClass);;
+
             foreach ($controller->getMethods(\ReflectionMethod::IS_PUBLIC) as $key => $action) {
                 foreach ($action->getAttributes() as $key => $attribute) {
-                    dump("\\" . $controller->name, $action->name, $attribute->newInstance(), $current_route);
-                    //    /**
-                    //     * \Spacers\Framework\Controller\AbstractController  $class
-                    //     */
-                    //    $class = "\\". $controller->name;
-                    //    $class::getInstance()->{$action->name}();
+
+                    if (
+                        $attribute->newInstance() instanceof Route
+                        &&
+                        $attribute->newInstance()->path === $current_route->path
+                        &&
+                        $attribute->newInstance()->method === $current_route->method
+                    ) {
+                        return $ControllerClass::getInstance()->{$action->name}();
+                    }
                 }
             }
         }
+
+        throw new NotFoundExcetion("Requested route '{$current_route->method}:{$current_route->path}' unknown");
 
     }
 
@@ -39,7 +55,7 @@ class Kernel
 
         $controllers = array();
         foreach ($matches as $value) {
-            $class = str_replace(
+            $controllers[] = $class = str_replace(
                 // search string to replace
                 ["$SPACERS_PROJECT_DIR/src", "/", ".php"],
                 // with this
@@ -47,7 +63,7 @@ class Kernel
                 // string value
                 $value[0]
             );
-            $controllers[] = self::getReflectedController($class);
+           
         }
 
         return $controllers;

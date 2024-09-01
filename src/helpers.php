@@ -22,3 +22,11 @@ function dump($context, ...$values): void
         echo "</pre>";
     }
 }
+
+function exceptionHandler(Throwable $exception)
+{
+    // http_response_code($exception::STATUS_CODE);
+    $trace = explode("\n", $exception->getTraceAsString());
+    array_shift($trace);
+    dump("<b>{$exception->getMessage()}</b>", implode("\n", $trace));
+}
