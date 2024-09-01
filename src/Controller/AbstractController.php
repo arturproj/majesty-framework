@@ -1,8 +1,9 @@
 <?php
 
 namespace Spacers\Framework\Controller;
+use Spacers\Framework\Constant\Pattern\Singleton;
 
-class AbstractController extends Constant\Pattern\Singleton implements AbstractControllerInterface
+class AbstractController extends Singleton implements AbstractControllerInterface
 {
     /**
      * Summary of json

@@ -1,6 +1,6 @@
 <?php
 
-namespace Spacers\Framework\Controller\Constant\Pattern;
+namespace Spacers\Framework\Constant\Pattern;
 
 class Singleton
 {

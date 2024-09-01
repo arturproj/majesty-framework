@@ -11,3 +11,14 @@ function get_host_location(): string
     )[0] . '://' . $_SERVER['HTTP_HOST'];
 }
 
+function dump($context, ...$values): void
+{
+    echo "<pre>";
+    print_r($context);
+    echo "</pre>";
+    foreach ($values as $key => $value) {
+        echo "<pre>";
+        print_r($value);
+        echo "</pre>";
+    }
+}
