@@ -10,23 +10,66 @@ function get_host_location(): string
         strtolower($_SERVER['SERVER_PROTOCOL'])
     )[0] . '://' . $_SERVER['HTTP_HOST'];
 }
-
-function dump($context, ...$values): void
+/**
+ * Summary of spacers_exception_handler
+ * @param Throwable $exception
+ * @return void
+ */
+function spacers_exception_handler(Throwable $exception): void
 {
-    echo "<pre>";
-    print_r($context);
-    echo "</pre>";
-    foreach ($values as $key => $value) {
-        echo "<pre>";
-        print_r($value);
-        echo "</pre>";
-    }
+    dd($exception);
 }
 
-function exceptionHandler(Throwable $exception)
+/**
+ * Summary of default_environments
+ * @param array $environments
+ * @return array
+ */
+function set_default_environments(array $environments): array
 {
-    // http_response_code($exception::STATUS_CODE);
-    $trace = explode("\n", $exception->getTraceAsString());
-    array_shift($trace);
-    dump("<b>{$exception->getMessage()}</b>", implode("\n", $trace));
+    $environments["SPACERS_PROJECT_DIR"] = realpath(getcwd() . "/../");
+    $environments["APP_DEBUG"] = $environments["APP_DEBUG"] ?? 0;
+    $environments["APP_ENV"] = $environments["APP_ENV"] ?? "production";
+
+    foreach ($environments as $key => $value) {
+        putenv($key . "=" . $value);
+    }
+
+    return $environments;
+}
+/**
+ * Summary of is_debug
+ * @return bool
+ */
+function is_debug(): bool
+{
+    return (bool) getenv("APP_DEBUG");
+}
+/**
+ * Summary of json_validate
+ * @param string $string
+ * @return bool
+ */
+function json_validate(string $string): bool
+{
+    json_decode($string);
+
+    return json_last_error() === JSON_ERROR_NONE;
+}
+
+function render_template(string $fimename, array $attributes = []): string
+{
+    foreach ($attributes as $key => $value) {
+        $$key = $value;
+    }
+    try {
+        ob_start();
+        require $fimename;
+        $content = ob_get_clean();
+        flush();
+        return $content;
+    } catch (\Throwable $th) {
+        throw new \Exception("Templat error", 0, $th);
+        exit(0);
+    }
 }

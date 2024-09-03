@@ -4,26 +4,33 @@ namespace Spacers\Framework;
 use Spacers\Framework\Constant\Attribute\Route;
 use Spacers\Framework\Exception\NotFoundExcetion;
 
-class Kernel
+
+
+final class Kernel
 {
-    public static function init($callback, array $environments = [])
+    public static function init(mixed $callback = null, array $environments = [])
     {
-        foreach ($environments as $key => $value) {
-            putenv("$key=$value");
-        }
-        $callback();
+        set_default_environments($environments);
 
-        $controllers = self::load_controllers();
+        is_callable($callback) && call_user_func($callback, $environments);
+        
 
-        if(empty($controllers)) {
+        $controllers = self::loadControllerDir();
+
+        if (empty($controllers)) {
             return dump("controllers list is empty");
         }
 
-        $current_route = new Route(path: $_SERVER["REQUEST_URI"], alias: "*", method: $_SERVER["REQUEST_METHOD"]);
-        
+        $current_route = new Route(
+            path: $_SERVER["REQUEST_URI"],
+            alias: "client_current_route",
+            method: $_SERVER["REQUEST_METHOD"]
+        );
+
         foreach ($controllers as $ControllerClass) {
             /** @var \ReflectionClass $controller */
-            $controller = self::getReflectedController($ControllerClass);;
+            $controller = self::getReflectedController($ControllerClass);
+            ;
 
             foreach ($controller->getMethods(\ReflectionMethod::IS_PUBLIC) as $key => $action) {
                 foreach ($action->getAttributes() as $key => $attribute) {
@@ -42,10 +49,9 @@ class Kernel
         }
 
         throw new NotFoundExcetion("Requested route '{$current_route->method}:{$current_route->path}' unknown");
-
     }
 
-    private static function load_controllers(): array
+    private static function loadControllerDir(): array
     {
         $SPACERS_PROJECT_DIR = getenv("SPACERS_PROJECT_DIR");
 
@@ -55,7 +61,7 @@ class Kernel
 
         $controllers = array();
         foreach ($matches as $value) {
-            $controllers[] = $class = str_replace(
+            $controllers[] = str_replace(
                 // search string to replace
                 ["$SPACERS_PROJECT_DIR/src", "/", ".php"],
                 // with this
@@ -63,7 +69,7 @@ class Kernel
                 // string value
                 $value[0]
             );
-           
+
         }
 
         return $controllers;

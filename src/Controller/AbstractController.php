@@ -1,123 +1,80 @@
 <?php
 
 namespace Spacers\Framework\Controller;
+use Spacers\Framework\Constant\Attribute\File;
+use Spacers\Framework\Constant\Attribute\HeaderType;
 use Spacers\Framework\Constant\Pattern\Singleton;
 use Spacers\Framework\Exception\NotFoundExcetion;
+use Spacers\Framework\Response\FileResponse;
+use Spacers\Framework\Response\JsonResponse;
+use Spacers\Framework\Response\Response;
 
 class AbstractController extends Singleton implements AbstractControllerInterface
 {
     /**
-     * Summary of send
-     * @param string $text any input to encode as text string 
-     * @param array $headers list headers to set begin response
-     * @param int $code status code response
-     * @return void
+     * Summary of text
+     * @param string $text
+     * @param array $headers
+     * @param int $code
+     * @return \Spacers\Framework\Response\Response
      */
-    public function send(string $text, array $headers = [], int $code = 200): void
+    public function text(string $text, array $headers = [], int $code = 200): Response
     {
-        $this->flush_content_buffer_processing($text, $headers, $code);
+        $response = new Response($text, $headers, $code);
+        $this->flush_content_file_processing($response);
+        return $response;
     }
+
     /**
      * Summary of json
-     * @param mixed $data any input to encode as json string
-     * @param array $headers list headers to set begin response
-     * @param int $code status code response
-     * @return \JsonSerializable
+     * @param mixed $data
+     * @param array $headers
+     * @param int $code
+     * @return \Spacers\Framework\Response\Response
      */
-    public function json($data, array $headers = [], int $code = 200): void
+    protected function json($data, array $headers = [], int $code = 200): Response
     {
-        $this->flush_content_buffer_processing(json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE), $headers, $code);
+        $response = new JsonResponse($data, $headers, $code);
+        $this->flush_content_file_processing($response);
+        return $response;
     }
 
     /**
      * Summary of render
-     * @param string $template filename template end with *.tpl.php
-     * @param array $proprieties proprieties to inject into template
-     * @param array $headers list headers to set begin response
-     * @param int $code status code response
-     * @return void
+     * @param string $filename
+     * @param array $proprieties
+     * @param array $headers
+     * @param int $code
+     * @throws \Spacers\Framework\Exception\NotFoundExcetion
+     * @return \Spacers\Framework\Response\Response
      */
-    public function render(string $template, array $proprieties = [], array $headers = [], int $code = 200): void
+    protected function render(string $filename, array $proprieties = [], array $headers = [], int $code = 200): Response
     {
         $template_path = getenv("SPACERS_PROJECT_DIR") . "/templates";
 
         if (!is_dir($template_path)) {
             throw new NotFoundExcetion("Template directory '$template_path' not found.");
         }
-        if (!file_exists("$template_path/$template")) {
-            throw new NotFoundExcetion("Template '$template_path/$template' not found.");
+        $filename = $template_path . "/" . $filename;
+        if (!is_file($filename)) {
+            throw new NotFoundExcetion("Template '$filename' not found.");
         }
 
-        $this->flush_content_file_processing("$template_path/$template", $proprieties, $headers, $code);
+        $response = new FileResponse($filename, $proprieties, $headers, $code);
+        $this->flush_content_file_processing($response);
+        return $response;
     }
 
-    /**
-     * Summary of update_headers
-     * @param array $headers
-     * @param string[] $attribute
-     * @return array
-     */
-    private function update_headers(array $headers, ...$attribute): array
-    {
-        array_push($headers, ...$attribute);
-        return $headers;
-    }
-
-    private function flush_content_file_processing(string $template, array $proprieties, array $headers, int $code): void
-    {
  
-
-        ob_start();
-
-
-        foreach ($proprieties as $key => $value) {
-            $$key = $value;
-        }
-
-        require $template;
-
-        header("HTTP/3 $code");
-        header("content-length: " . ob_get_length());
-        header("x-powered-by: Spacers Framework PHP/" . PHP_VERSION);
-
-        $fi = new \finfo(FILEINFO_MIME_TYPE);
-        $headers = $this->update_headers(
-            $headers,
-            "Content-Type: " . $fi->file($template)
-        );
-        foreach ($headers as $value) {
-            header("$value");
-        }
-
-        ob_end_flush();
-        ob_flush();
-        flush();
-        session_write_close();
-    }
-    private function flush_content_buffer_processing($output, array $headers, int $code): void
+    private function flush_content_file_processing(Response $response): void
     {
-        ob_start();
-
-        $fi = new \finfo(FILEINFO_MIME);
-
-        echo $output;
-
-        header("HTTP/3 $code");
-        header("content-length: " . ob_get_length());
-        header("x-powered-by: Spacers Framework PHP/" . PHP_VERSION);
-
-        $headers = $this->update_headers(
-            $headers,
-            "Content-Type: " . $fi->buffer($output)
-        );
-        dump($headers);
-        foreach ($headers as $value) {
-            header("$value");
+        if (!headers_sent()) {
+            header("HTTP/3 $response->code");
+            foreach ($response->headers as $header) {
+                header("$header->name: $header->value");
+            }
         }
 
-        ob_end_flush();
-        ob_flush();
-        flush();
-        session_write_close();
+        echo $response->content;
     }
 }
